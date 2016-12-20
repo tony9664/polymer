@@ -1,0 +1,81 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<time.h>
+#include<math.h>
+#define PI 3.1415926
+struct atom{
+	double x,y,z;
+};
+
+int n_atom;
+double xlo,xhi,ylo,yhi,zlo,zhi,step_length;
+struct atom a[1000];
+
+int write_head(FILE *fp)
+{
+	fprintf(fp,"#LAMMPS single-chain polymer data file\n\n");
+	fprintf(fp,"%12d  atoms\n",n_atom);
+	fprintf(fp,"%12d  bonds\n\n",n_atom-1);
+	fprintf(fp,"%12d  atom types\n",1);
+	fprintf(fp,"%12d  bond types\n\n",1);
+	fprintf(fp,"%-10f  %-10f  xlo xhi\n",xlo,xhi);
+	fprintf(fp,"%-10f  %-10f  ylo yhi\n",ylo,yhi);
+	fprintf(fp,"%-10f  %-10f  zlo zhi\n\n",zlo,zhi);
+	fprintf(fp,"Masses\n\n");
+	fprintf(fp,"%12d  %.6f\n\n",1,1.000000);
+	return 0;
+}
+
+int write_atoms(FILE *fp)
+{
+	int i;
+	double theta,fi;
+	srand(time(0));
+	a[0].x=rand()/(RAND_MAX+1.0)*(xhi-xlo)+xlo;
+	a[0].y=rand()/(RAND_MAX+1.0)*(yhi-ylo)+ylo;
+	a[0].z=rand()/(RAND_MAX+1.0)*(zhi-zlo)+zlo;
+	fprintf(fp,"Atoms\n\n");
+	for(i=1;i<n_atom;i++){
+		do{
+			theta=PI*rand()/(RAND_MAX+1.0);
+			fi=2*PI*rand()/(RAND_MAX+1.0);
+			a[i].x=a[i-1].x+step_length*sin(theta)*cos(fi);
+			a[i].y=a[i-1].y+step_length*sin(theta)*sin(fi);
+			a[i].z=a[i-1].z+step_length*cos(theta);
+		}while(a[i].x<xlo || a[i].x>xhi ||a[i].y<ylo||a[i].y>yhi||a[i].z<zlo||a[i].z>zhi);
+	}
+	for(i=0;i<n_atom;i++){
+		fprintf(fp,"%8d%8d%8d%10.3f%10.3f%10.3f\n",i+1,1,1,a[i].x,a[i].y,a[i].z);
+	}
+	fprintf(fp,"\n");
+	return 0;
+}
+
+int write_bonds(FILE *fp)
+{
+	int i;
+	fprintf(fp,"Bonds\n\n");
+	for(i=0;i<n_atom-1;i++)
+	{
+		fprintf(fp,"%8d%8d%8d%8d\n",i+1,1,i+1,i+2);
+	}
+	return 0;
+}
+
+int main(int argc,char* argv[])
+{
+	FILE *fp1=fopen("data.poly","w");
+	n_atom=atoi(argv[1]);
+	xlo=atof(argv[2]);
+	xhi=atof(argv[3]);
+	ylo=atof(argv[4]);
+	yhi=atof(argv[5]);
+	zlo=atof(argv[6]);
+	zhi=atof(argv[7]);
+	step_length=atof(argv[8]);
+	write_head(fp1);
+	write_atoms(fp1);
+	write_bonds(fp1);
+	fclose(fp1);
+	return 0;
+}
