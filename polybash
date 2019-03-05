@@ -3,6 +3,8 @@
 #include<time.h>
 #include<math.h>
 #define PI 3.1415926
+
+//modified modified
 struct atom{
 	double x,y,z;
 };
